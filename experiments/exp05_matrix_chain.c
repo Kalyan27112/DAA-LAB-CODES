@@ -1,6 +1,47 @@
 #include <limits.h>
 #include <stdio.h>
-#define MAXM 100
-long long cost[MAXM+1][MAXM+1];int split[MAXM+1][MAXM+1];
-void print_order(int i,int j){if(i==j){printf("A%d",i);return;}printf("(");print_order(i,split[i][j]);print_order(split[i][j]+1,j);printf(")");}
-int main(void){int n;printf("Number of matrices (1-%d): ",MAXM);if(scanf("%d",&n)!=1||n<1||n>MAXM)return 1;long long p[n+1];printf("Enter %d dimensions: ",n+1);for(int i=0;i<=n;i++)if(scanf("%lld",&p[i])!=1||p[i]<=0)return 1;for(int len=2;len<=n;len++)for(int i=1;i+len-1<=n;i++){int j=i+len-1;cost[i][j]=LLONG_MAX;for(int k=i;k<j;k++){long long c=cost[i][k]+cost[k+1][j]+p[i-1]*p[k]*p[j];if(c<cost[i][j])cost[i][j]=c,split[i][j]=k;}}printf("Minimum scalar multiplications: %lld\nOptimal parenthesization: ",cost[1][n]);print_order(1,n);puts("");return 0;}
+
+#define MAX_MATRICES 100
+static long long cost[MAX_MATRICES + 1][MAX_MATRICES + 1];
+static int split[MAX_MATRICES + 1][MAX_MATRICES + 1];
+
+static void print_order(int first, int last) {
+    if (first == last) {
+        printf("A%d", first);
+        return;
+    }
+    putchar('(');
+    print_order(first, split[first][last]);
+    print_order(split[first][last] + 1, last);
+    putchar(')');
+}
+
+int main(void) {
+    int count;
+    printf("Number of matrices (1-%d): ", MAX_MATRICES);
+    if (scanf("%d", &count) != 1 || count < 1 || count > MAX_MATRICES) return 1;
+    long long dimensions[count + 1];
+    printf("Enter %d positive dimensions: ", count + 1);
+    for (int i = 0; i <= count; ++i)
+        if (scanf("%lld", &dimensions[i]) != 1 || dimensions[i] <= 0) return 1;
+
+    for (int length = 2; length <= count; ++length) {
+        for (int first = 1; first + length - 1 <= count; ++first) {
+            int last = first + length - 1;
+            cost[first][last] = LLONG_MAX;
+            for (int k = first; k < last; ++k) {
+                long long candidate = cost[first][k] + cost[k + 1][last]
+                    + dimensions[first - 1] * dimensions[k] * dimensions[last];
+                if (candidate < cost[first][last]) {
+                    cost[first][last] = candidate;
+                    split[first][last] = k;
+                }
+            }
+        }
+    }
+    printf("Minimum scalar multiplications: %lld\n", cost[1][count]);
+    printf("Optimal parenthesization: ");
+    print_order(1, count);
+    putchar('\n');
+    return 0;
+}

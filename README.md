@@ -5,10 +5,10 @@ C implementations following the experiment list in the DAA course plan. Each exp
 ## Build
 
 ```sh
-gcc -std=c99 -O2 exp01_binary_search.c -o exp01
+gcc -std=c99 -O2 experiments/exp01_binary_search.c -o exp01
 ```
 
-Run the executable and enter the requested data when prompted. Repeat the same build pattern for `exp02` through `exp09`, using each matching `.c` filename.
+Run the executable and enter the requested data when prompted. Repeat the same build pattern for `experiments/exp02_merge_quick_sort.c` through `experiments/exp09_knapsack_comparison.c`, using a distinct output name for each executable.
 
 ## Experiments
 

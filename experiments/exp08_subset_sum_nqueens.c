@@ -1,6 +1,73 @@
 #include <stdio.h>
-#define MAXN 20
-int a[MAXN],pick[MAXN],n;long long target;int found=0;
-void subset(int i,long long sum){if(sum==target){found=1;printf("{");int first=1;for(int k=0;k<n;k++)if(pick[k])printf("%s%d",first?"":",",a[k]),first=0;puts("}");return;}if(i==n||sum>target)return;pick[i]=1;subset(i+1,sum+a[i]);pick[i]=0;subset(i+1,sum);}
-long long queen_count(int row,int n,int cols[],int d1[],int d2[]){if(row==n)return 1;long long count=0;for(int c=0;c<n;c++)if(!cols[c]&&!d1[row-c+n-1]&&!d2[row+c]){cols[c]=d1[row-c+n-1]=d2[row+c]=1;count+=queen_count(row+1,n,cols,d1,d2);cols[c]=d1[row-c+n-1]=d2[row+c]=0;}return count;}
-int main(void){int q;printf("Subset sum: number of nonnegative values (max %d) and target: ",MAXN);if(scanf("%d%lld",&n,&target)!=2||n<0||n>MAXN||target<0)return 1;printf("Values: ");for(int i=0;i<n;i++){scanf("%d",&a[i]);if(a[i]<0)return 1;}subset(0,0);if(!found)puts("No subset found.");printf("N-Queens board size (1-%d): ",MAXN);if(scanf("%d",&q)!=1||q<1||q>MAXN)return 1;int cols[MAXN]={0},d1[2*MAXN]={0},d2[2*MAXN]={0};printf("Number of solutions: %lld\n",queen_count(0,q,cols,d1,d2));return 0;}
+
+#define MAX_VALUES 20
+#define MAX_BOARD 20
+
+static int values[MAX_VALUES], chosen[MAX_VALUES], value_count;
+static long long target;
+static int solution_found;
+
+static void print_subset(void) {
+    int first = 1;
+    putchar('{');
+    for (int i = 0; i < value_count; ++i) {
+        if (chosen[i]) {
+            printf("%s%d", first ? "" : ", ", values[i]);
+            first = 0;
+        }
+    }
+    puts("}");
+}
+
+static void find_subsets(int index, long long sum) {
+    if (sum > target) return;
+    if (index == value_count) {
+        if (sum == target) {
+            solution_found = 1;
+            print_subset();
+        }
+        return;
+    }
+    chosen[index] = 1;
+    find_subsets(index + 1, sum + values[index]);
+    chosen[index] = 0;
+    find_subsets(index + 1, sum);
+}
+
+static long long count_queen_solutions(int row, int size, int columns[],
+                                       int diagonals_down[], int diagonals_up[]) {
+    if (row == size) return 1;
+    long long total = 0;
+    for (int column = 0; column < size; ++column) {
+        int down = row - column + size - 1;
+        int up = row + column;
+        if (!columns[column] && !diagonals_down[down] && !diagonals_up[up]) {
+            columns[column] = diagonals_down[down] = diagonals_up[up] = 1;
+            total += count_queen_solutions(row + 1, size, columns,
+                                           diagonals_down, diagonals_up);
+            columns[column] = diagonals_down[down] = diagonals_up[up] = 0;
+        }
+    }
+    return total;
+}
+
+int main(void) {
+    printf("Subset sum: number of nonnegative values (max %d) and target: ", MAX_VALUES);
+    if (scanf("%d%lld", &value_count, &target) != 2 || value_count < 0 ||
+        value_count > MAX_VALUES || target < 0) return 1;
+    printf("Values: ");
+    for (int i = 0; i < value_count; ++i)
+        if (scanf("%d", &values[i]) != 1 || values[i] < 0) return 1;
+    find_subsets(0, 0);
+    if (!solution_found) puts("No subset found.");
+
+    int size;
+    printf("N-Queens board size (1-%d): ", MAX_BOARD);
+    if (scanf("%d", &size) != 1 || size < 1 || size > MAX_BOARD) return 1;
+    int columns[MAX_BOARD] = {0};
+    int diagonals_down[2 * MAX_BOARD] = {0};
+    int diagonals_up[2 * MAX_BOARD] = {0};
+    printf("Number of solutions: %lld\n",
+           count_queen_solutions(0, size, columns, diagonals_down, diagonals_up));
+    return 0;
+}

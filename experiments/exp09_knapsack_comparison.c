@@ -1,8 +1,79 @@
 #include <stdio.h>
 #include <stdlib.h>
-typedef struct{int w,v;}Item;
-int cmp(const void*a,const void*b){const Item*x=a,*y=b;long long l=(long long)x->v*y->w,r=(long long)y->v*x->w;return (l<r)-(l>r);}
-long long backtrack(const Item a[],int n,int i,int cap){if(i==n)return 0;long long best=backtrack(a,n,i+1,cap);if(a[i].w<=cap){long long take=a[i].v+backtrack(a,n,i+1,cap-a[i].w);if(take>best)best=take;}return best;}
-long long upper_bound(const Item a[],int n,int i,int cap,long long value){while(i<n&&a[i].w<=cap){cap-=a[i].w;value+=a[i++].v;}if(i<n)value+=((long long)a[i].v*cap+a[i].w-1)/a[i].w;return value;}
-long long branch_bound(const Item a[],int n,int i,int cap,long long value,long long best){if(i==n)return value>best?value:best;if(upper_bound(a,n,i,cap,value)<=best)return best;best=branch_bound(a,n,i+1,cap,value,best);if(a[i].w<=cap){long long take=branch_bound(a,n,i+1,cap-a[i].w,value+a[i].v,best);if(take>best)best=take;}return best;}
-int main(void){int n,W;printf("Items and capacity: ");if(scanf("%d%d",&n,&W)!=2||n<0||W<0)return 1;Item a[n?n:1],sorted[n?n:1];puts("Enter positive weight and nonnegative value:");for(int i=0;i<n;i++){scanf("%d%d",&a[i].w,&a[i].v);if(a[i].w<=0||a[i].v<0)return 1;sorted[i]=a[i];}qsort(sorted,n,sizeof(Item),cmp);printf("Backtracking optimum: %lld\n",backtrack(a,n,0,W));printf("Branch-and-bound optimum: %lld\n",branch_bound(sorted,n,0,W,0,0));long long dp[W+1];for(int c=0;c<=W;c++)dp[c]=0;for(int i=0;i<n;i++)for(int c=W;c>=a[i].w;c--)if(dp[c]<dp[c-a[i].w]+a[i].v)dp[c]=dp[c-a[i].w]+a[i].v;printf("Dynamic-programming optimum: %lld\n",dp[W]);return 0;}
+
+typedef struct { int weight, value; } Item;
+
+static int compare_ratio(const void *left, const void *right) {
+    const Item *a = left, *b = right;
+    long long lhs = (long long)a->value * b->weight;
+    long long rhs = (long long)b->value * a->weight;
+    return (lhs < rhs) - (lhs > rhs);
+}
+
+static long long solve_backtracking(const Item items[], int count,
+                                    int index, int capacity) {
+    if (index == count) return 0;
+    long long best = solve_backtracking(items, count, index + 1, capacity);
+    if (items[index].weight <= capacity) {
+        long long take = items[index].value +
+            solve_backtracking(items, count, index + 1,
+                               capacity - items[index].weight);
+        if (take > best) best = take;
+    }
+    return best;
+}
+
+static long long upper_bound(const Item items[], int count, int index,
+                             int capacity, long long value) {
+    while (index < count && items[index].weight <= capacity) {
+        capacity -= items[index].weight;
+        value += items[index].value;
+        ++index;
+    }
+    if (index < count)
+        value += ((long long)items[index].value * capacity
+                  + items[index].weight - 1) / items[index].weight;
+    return value;
+}
+
+static long long solve_branch_and_bound(const Item items[], int count,
+                                        int index, int capacity,
+                                        long long value, long long best) {
+    if (index == count) return value > best ? value : best;
+    if (upper_bound(items, count, index, capacity, value) <= best) return best;
+    best = solve_branch_and_bound(items, count, index + 1, capacity, value, best);
+    if (items[index].weight <= capacity) {
+        long long take = solve_branch_and_bound(items, count, index + 1,
+            capacity - items[index].weight, value + items[index].value, best);
+        if (take > best) best = take;
+    }
+    return best;
+}
+
+int main(void) {
+    int count, capacity;
+    printf("Number of items and capacity: ");
+    if (scanf("%d%d", &count, &capacity) != 2 || count < 0 || capacity < 0) return 1;
+    Item items[count > 0 ? count : 1], sorted[count > 0 ? count : 1];
+    puts("Enter each item's positive weight and nonnegative value:");
+    for (int i = 0; i < count; ++i) {
+        if (scanf("%d%d", &items[i].weight, &items[i].value) != 2 ||
+            items[i].weight <= 0 || items[i].value < 0) return 1;
+        sorted[i] = items[i];
+    }
+    qsort(sorted, (size_t)count, sizeof sorted[0], compare_ratio);
+    long long *dp = calloc((size_t)capacity + 1, sizeof *dp);
+    if (dp == NULL) return 1;
+    for (int i = 0; i < count; ++i)
+        for (int c = capacity; c >= items[i].weight; --c)
+            if (dp[c] < dp[c - items[i].weight] + items[i].value)
+                dp[c] = dp[c - items[i].weight] + items[i].value;
+
+    printf("Backtracking optimum: %lld\n",
+           solve_backtracking(items, count, 0, capacity));
+    printf("Branch-and-bound optimum: %lld\n",
+           solve_branch_and_bound(sorted, count, 0, capacity, 0, 0));
+    printf("Dynamic-programming optimum: %lld\n", dp[capacity]);
+    free(dp);
+    return 0;
+}

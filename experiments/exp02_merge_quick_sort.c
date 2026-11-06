@@ -1,8 +1,70 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <time.h>
-void merge_sort(int a[],int l,int r){if(l>=r)return;int m=l+(r-l)/2;merge_sort(a,l,m);merge_sort(a,m+1,r);int n=r-l+1,t[n],i=l,j=m+1,k=0;while(i<=m&&j<=r)t[k++]=a[i]<=a[j]?a[i++]:a[j++];while(i<=m)t[k++]=a[i++];while(j<=r)t[k++]=a[j++];for(i=0;i<n;i++)a[l+i]=t[i];}
-int partition(int a[],int l,int r){int p=a[r],i=l;for(int j=l;j<r;j++)if(a[j]<=p){int t=a[i];a[i++]=a[j];a[j]=t;}int t=a[i];a[i]=a[r];a[r]=t;return i;}
-void quick_sort(int a[],int l,int r){if(l<r){int p=partition(a,l,r);quick_sort(a,l,p-1);quick_sort(a,p+1,r);}}
-void show(const char*name,const int a[],int n,double ms){printf("%s (%.3f ms): ",name,ms);for(int i=0;i<n;i++)printf("%d ",a[i]);puts("");}
-int main(void){int n;printf("Number of elements: ");if(scanf("%d",&n)!=1||n<=0)return 1;int a[n],b[n];printf("Enter elements: ");for(int i=0;i<n;i++)scanf("%d",&a[i]),b[i]=a[i];clock_t s=clock();merge_sort(a,0,n-1);clock_t m=clock();quick_sort(b,0,n-1);clock_t e=clock();show("Merge sort",a,n,1000.0*(m-s)/CLOCKS_PER_SEC);show("Quick sort",b,n,1000.0*(e-m)/CLOCKS_PER_SEC);return 0;}
+
+static void merge_sort(int values[], int low, int high) {
+    if (low >= high) return;
+    int middle = low + (high - low) / 2;
+    merge_sort(values, low, middle);
+    merge_sort(values, middle + 1, high);
+    int length = high - low + 1;
+    int temporary[length];
+    int left = low, right = middle + 1, out = 0;
+    while (left <= middle && right <= high) {
+        if (values[left] <= values[right]) temporary[out++] = values[left++];
+        else temporary[out++] = values[right++];
+    }
+    while (left <= middle) temporary[out++] = values[left++];
+    while (right <= high) temporary[out++] = values[right++];
+    for (int i = 0; i < length; ++i) values[low + i] = temporary[i];
+}
+
+static int partition(int values[], int low, int high) {
+    int pivot = values[high], boundary = low;
+    for (int i = low; i < high; ++i) {
+        if (values[i] <= pivot) {
+            int temporary = values[boundary];
+            values[boundary++] = values[i];
+            values[i] = temporary;
+        }
+    }
+    int temporary = values[boundary];
+    values[boundary] = values[high];
+    values[high] = temporary;
+    return boundary;
+}
+
+static void quick_sort(int values[], int low, int high) {
+    if (low >= high) return;
+    int pivot = partition(values, low, high);
+    quick_sort(values, low, pivot - 1);
+    quick_sort(values, pivot + 1, high);
+}
+
+static void print_result(const char *label, const int values[], int count,
+                         double milliseconds) {
+    printf("%s (%.3f ms): ", label, milliseconds);
+    for (int i = 0; i < count; ++i) printf("%d ", values[i]);
+    putchar('\n');
+}
+
+int main(void) {
+    int count;
+    printf("Number of elements: ");
+    if (scanf("%d", &count) != 1 || count <= 0) return 1;
+    int merge_values[count], quick_values[count];
+    printf("Enter elements: ");
+    for (int i = 0; i < count; ++i) {
+        if (scanf("%d", &merge_values[i]) != 1) return 1;
+        quick_values[i] = merge_values[i];
+    }
+    clock_t start = clock();
+    merge_sort(merge_values, 0, count - 1);
+    clock_t middle = clock();
+    quick_sort(quick_values, 0, count - 1);
+    clock_t finish = clock();
+    print_result("Merge sort", merge_values, count,
+                 1000.0 * (middle - start) / CLOCKS_PER_SEC);
+    print_result("Quick sort", quick_values, count,
+                 1000.0 * (finish - middle) / CLOCKS_PER_SEC);
+    return 0;
+}
