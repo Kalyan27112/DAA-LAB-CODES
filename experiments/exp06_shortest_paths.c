@@ -1,0 +1,8 @@
+#include <limits.h>
+#include <stdio.h>
+#define MAXV 100
+#define MAXE 10000
+typedef struct{int u,v;long long w;}Edge;
+int main(void){int n,m;printf("Vertices and edges: ");if(scanf("%d%d",&n,&m)!=2||n<1||n>MAXV||m<0||m>MAXE)return 1;Edge e[MAXE];long long g[MAXV][MAXV];for(int i=0;i<n;i++)for(int j=0;j<n;j++)g[i][j]=(i==j?0:LLONG_MAX/4);puts("Enter directed edges (u v weight), vertices 0..n-1:");int nonnegative=1;for(int i=0;i<m;i++){scanf("%d%d%lld",&e[i].u,&e[i].v,&e[i].w);if(e[i].u<0||e[i].u>=n||e[i].v<0||e[i].v>=n)return 1;if(e[i].w<0)nonnegative=0;if(e[i].w<g[e[i].u][e[i].v])g[e[i].u][e[i].v]=e[i].w;}int src;printf("Source: ");scanf("%d",&src);if(src<0||src>=n)return 1;const long long INF=LLONG_MAX/4;long long d[MAXV];
+ if(nonnegative){int used[MAXV]={0};for(int i=0;i<n;i++)d[i]=INF;d[src]=0;for(int k=0;k<n;k++){int u=-1;for(int i=0;i<n;i++)if(!used[i]&&(u<0||d[i]<d[u]))u=i;if(u<0||d[u]==INF)break;used[u]=1;for(int v=0;v<n;v++)if(g[u][v]!=INF&&d[v]>d[u]+g[u][v])d[v]=d[u]+g[u][v];}printf("Dijkstra distances: ");for(int i=0;i<n;i++)if(d[i]==INF)printf("INF ");else printf("%lld ",d[i]);puts("");}else puts("Dijkstra skipped: a negative edge is present.");
+ for(int i=0;i<n;i++)d[i]=INF;d[src]=0;for(int k=1;k<n;k++){int changed=0;for(int i=0;i<m;i++)if(d[e[i].u]!=INF&&d[e[i].v]>d[e[i].u]+e[i].w)d[e[i].v]=d[e[i].u]+e[i].w,changed=1;if(!changed)break;}for(int i=0;i<m;i++)if(d[e[i].u]!=INF&&d[e[i].v]>d[e[i].u]+e[i].w){puts("Bellman-Ford: reachable negative cycle detected.");return 0;}printf("Bellman-Ford distances: ");for(int i=0;i<n;i++)if(d[i]==INF)printf("INF ");else printf("%lld ",d[i]);puts("");return 0;}

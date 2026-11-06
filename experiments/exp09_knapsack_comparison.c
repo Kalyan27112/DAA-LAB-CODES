@@ -1,0 +1,8 @@
+#include <stdio.h>
+#include <stdlib.h>
+typedef struct{int w,v;}Item;
+int cmp(const void*a,const void*b){const Item*x=a,*y=b;long long l=(long long)x->v*y->w,r=(long long)y->v*x->w;return (l<r)-(l>r);}
+long long backtrack(const Item a[],int n,int i,int cap){if(i==n)return 0;long long best=backtrack(a,n,i+1,cap);if(a[i].w<=cap){long long take=a[i].v+backtrack(a,n,i+1,cap-a[i].w);if(take>best)best=take;}return best;}
+long long upper_bound(const Item a[],int n,int i,int cap,long long value){while(i<n&&a[i].w<=cap){cap-=a[i].w;value+=a[i++].v;}if(i<n)value+=((long long)a[i].v*cap+a[i].w-1)/a[i].w;return value;}
+long long branch_bound(const Item a[],int n,int i,int cap,long long value,long long best){if(i==n)return value>best?value:best;if(upper_bound(a,n,i,cap,value)<=best)return best;best=branch_bound(a,n,i+1,cap,value,best);if(a[i].w<=cap){long long take=branch_bound(a,n,i+1,cap-a[i].w,value+a[i].v,best);if(take>best)best=take;}return best;}
+int main(void){int n,W;printf("Items and capacity: ");if(scanf("%d%d",&n,&W)!=2||n<0||W<0)return 1;Item a[n?n:1],sorted[n?n:1];puts("Enter positive weight and nonnegative value:");for(int i=0;i<n;i++){scanf("%d%d",&a[i].w,&a[i].v);if(a[i].w<=0||a[i].v<0)return 1;sorted[i]=a[i];}qsort(sorted,n,sizeof(Item),cmp);printf("Backtracking optimum: %lld\n",backtrack(a,n,0,W));printf("Branch-and-bound optimum: %lld\n",branch_bound(sorted,n,0,W,0,0));long long dp[W+1];for(int c=0;c<=W;c++)dp[c]=0;for(int i=0;i<n;i++)for(int c=W;c>=a[i].w;c--)if(dp[c]<dp[c-a[i].w]+a[i].v)dp[c]=dp[c-a[i].w]+a[i].v;printf("Dynamic-programming optimum: %lld\n",dp[W]);return 0;}
