@@ -2,7 +2,7 @@
 #include <time.h>
 #include "knapsack_common.h"
 
-#define MAX_ITEMS 30
+#define MAX_ITEMS 24
 
 int main(void) {
     int count, capacity;
